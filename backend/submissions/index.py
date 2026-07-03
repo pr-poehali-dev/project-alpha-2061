@@ -13,10 +13,10 @@ def upload_bytes(s3, bucket_cdn_id, key, data, content_type):
     return f'https://cdn.poehali.dev/projects/{bucket_cdn_id}/bucket/{key}'
 
 
-def call_openai(messages, response_format_json=True):
-    api_key = os.environ['OPENAI_API_KEY']
+def call_mistral(messages, response_format_json=True):
+    api_key = os.environ['MISTRAL_API_KEY']
     payload = {
-        'model': 'gpt-4o-mini',
+        'model': 'mistral-large-latest',
         'messages': messages,
         'temperature': 0.7
     }
@@ -24,7 +24,7 @@ def call_openai(messages, response_format_json=True):
         payload['response_format'] = {'type': 'json_object'}
 
     req = urllib.request.Request(
-        'https://api.openai.com/v1/chat/completions',
+        'https://api.mistral.ai/v1/chat/completions',
         data=json.dumps(payload).encode('utf-8'),
         headers={
             'Authorization': f'Bearer {api_key}',
@@ -142,7 +142,7 @@ def handler(event: dict, context) -> dict:
         ]
 
         try:
-            ai_response = call_openai(ai_messages)
+            ai_response = call_mistral(ai_messages)
             generated = json.loads(ai_response)
         except Exception as e:
             generated = {
