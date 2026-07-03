@@ -15,10 +15,16 @@
       "bodyMatcher": "partial"
     },
     {
-      "name": "POST missing fields",
+      "name": "POST generate missing fields",
       "method": "POST",
-      "path": "/",
-      "body": {"name": "", "email": ""},
+      "path": "/?action=generate",
+      "body": {"name": "", "telegram_contact": ""},
+      "expectedStatus": 400
+    },
+    {
+      "name": "GET single missing id",
+      "method": "GET",
+      "path": "/?action=get",
       "expectedStatus": 400
     }
   ]
