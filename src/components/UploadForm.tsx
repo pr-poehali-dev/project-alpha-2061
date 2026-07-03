@@ -44,9 +44,30 @@ export default function UploadForm() {
     setIsSubmitting(true)
 
     try {
-      const [oldKpData, referenceKpData] = await Promise.all([
-        fileToBase64(oldKp),
-        fileToBase64(referenceKp),
+      const uploadFile = async (file: File, prefix: string) => {
+        const data = await fileToBase64(file)
+        const res = await fetch(`${SUBMISSIONS_URL}?action=upload_file`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            prefix,
+            file: {
+              filename: file.name,
+              content_type: file.type || "application/octet-stream",
+              data,
+            },
+          }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          throw new Error(err.error || "Не удалось загрузить файл")
+        }
+        return res.json() as Promise<{ url: string; filename: string }>
+      }
+
+      const [oldKpUploaded, referenceKpUploaded] = await Promise.all([
+        uploadFile(oldKp, "old"),
+        uploadFile(referenceKp, "ref"),
       ])
 
       const response = await fetch(`${SUBMISSIONS_URL}?action=generate`, {
@@ -55,16 +76,10 @@ export default function UploadForm() {
         body: JSON.stringify({
           name,
           telegram_contact: telegramContact,
-          old_kp_file: {
-            filename: oldKp.name,
-            content_type: oldKp.type || "application/octet-stream",
-            data: oldKpData,
-          },
-          reference_kp_file: {
-            filename: referenceKp.name,
-            content_type: referenceKp.type || "application/octet-stream",
-            data: referenceKpData,
-          },
+          old_kp_url: oldKpUploaded.url,
+          old_kp_filename: oldKpUploaded.filename,
+          reference_kp_url: referenceKpUploaded.url,
+          reference_kp_filename: referenceKpUploaded.filename,
         }),
       })
 

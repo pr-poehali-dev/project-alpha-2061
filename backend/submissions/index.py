@@ -87,33 +87,46 @@ def handler(event: dict, context) -> dict:
     )
     bucket_cdn_id = os.environ['AWS_ACCESS_KEY_ID']
 
+    if method == 'POST' and action == 'upload_file':
+        body = json.loads(event.get('body', '{}'))
+        file_obj = body.get('file')
+        prefix = body.get('prefix', 'file')
+
+        if not file_obj:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'Не передан file'})
+            }
+
+        filename = file_obj.get('filename', 'file.pdf')
+        safe_name = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
+        content_type = file_obj.get('content_type', 'application/octet-stream')
+        data = base64.b64decode(file_obj['data'])
+        key = f'submissions/{uuid.uuid4()}/{prefix}_{safe_name}'
+        url = upload_bytes(s3, bucket_cdn_id, key, data, content_type)
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'url': url, 'filename': safe_name})
+        }
+
     if method == 'POST' and action == 'generate':
         body = json.loads(event.get('body', '{}'))
         name = body.get('name', '').strip()
         telegram_contact = body.get('telegram_contact', '').strip()
-        old_kp = body.get('old_kp_file')
-        reference_kp = body.get('reference_kp_file')
+        old_kp_url = body.get('old_kp_url', '').strip()
+        old_kp_filename = body.get('old_kp_filename', 'file.pdf')
+        reference_kp_url = body.get('reference_kp_url', '').strip()
+        reference_kp_filename = body.get('reference_kp_filename', 'file.pdf')
 
-        if not name or not telegram_contact or not old_kp or not reference_kp:
+        if not name or not telegram_contact or not old_kp_url or not reference_kp_url:
             return {
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({'error': 'Заполните имя, телеграм и загрузите оба файла'})
             }
-
-        submission_id = str(uuid.uuid4())
-
-        def store(file_obj, prefix):
-            filename = file_obj.get('filename', 'file.pdf')
-            safe_name = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
-            content_type = file_obj.get('content_type', 'application/octet-stream')
-            data = base64.b64decode(file_obj['data'])
-            key = f'submissions/{submission_id}/{prefix}_{safe_name}'
-            url = upload_bytes(s3, bucket_cdn_id, key, data, content_type)
-            return url, safe_name, data
-
-        old_kp_url, old_kp_filename, _ = store(old_kp, 'old')
-        reference_kp_url, reference_kp_filename, _ = store(reference_kp, 'ref')
 
         old_kp_text = body.get('old_kp_text', '')[:6000]
 
