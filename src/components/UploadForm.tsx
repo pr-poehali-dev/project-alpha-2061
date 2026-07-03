@@ -150,44 +150,46 @@ export default function UploadForm() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label className="text-white/90">Ваше текущее КП</Label>
-        <label
-          htmlFor="old_kp"
-          className="flex items-center gap-3 rounded-xl border border-dashed border-white/30 bg-white/5 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors"
-        >
-          <Icon name="FileText" size={20} className="text-white/70 shrink-0" />
-          <span className="text-white/80 text-sm truncate">
-            {oldKp ? oldKp.name : "Выберите PDF или файл КП"}
-          </span>
-        </label>
-        <input
-          id="old_kp"
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="hidden"
-          onChange={(e) => setOldKp(e.target.files?.[0] || null)}
-        />
-      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-2">
+          <Label className="text-white/90">Ваше текущее КП</Label>
+          <label
+            htmlFor="old_kp"
+            className="flex flex-col items-center justify-center gap-2 aspect-square rounded-xl border border-dashed border-white/30 bg-white/5 px-3 py-4 cursor-pointer hover:bg-white/10 transition-colors text-center"
+          >
+            <Icon name="FileText" size={24} className="text-white/70 shrink-0" />
+            <span className="text-white/80 text-xs line-clamp-2 break-words">
+              {oldKp ? oldKp.name : "Выберите PDF или файл КП"}
+            </span>
+          </label>
+          <input
+            id="old_kp"
+            type="file"
+            accept=".pdf,.doc,.docx"
+            className="hidden"
+            onChange={(e) => setOldKp(e.target.files?.[0] || null)}
+          />
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <Label className="text-white/90">Пример дизайна, который нравится</Label>
-        <label
-          htmlFor="reference_kp"
-          className="flex items-center gap-3 rounded-xl border border-dashed border-white/30 bg-white/5 px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors"
-        >
-          <Icon name="Sparkles" size={20} className="text-white/70 shrink-0" />
-          <span className="text-white/80 text-sm truncate">
-            {referenceKp ? referenceKp.name : "Выберите PDF-пример дизайна"}
-          </span>
-        </label>
-        <input
-          id="reference_kp"
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="hidden"
-          onChange={(e) => setReferenceKp(e.target.files?.[0] || null)}
-        />
+        <div className="flex flex-col gap-2">
+          <Label className="text-white/90">Пример дизайна, который нравится</Label>
+          <label
+            htmlFor="reference_kp"
+            className="flex flex-col items-center justify-center gap-2 aspect-square rounded-xl border border-dashed border-white/30 bg-white/5 px-3 py-4 cursor-pointer hover:bg-white/10 transition-colors text-center"
+          >
+            <Icon name="Sparkles" size={24} className="text-white/70 shrink-0" />
+            <span className="text-white/80 text-xs line-clamp-2 break-words">
+              {referenceKp ? referenceKp.name : "Выберите PDF-пример дизайна"}
+            </span>
+          </label>
+          <input
+            id="reference_kp"
+            type="file"
+            accept=".pdf,.doc,.docx"
+            className="hidden"
+            onChange={(e) => setReferenceKp(e.target.files?.[0] || null)}
+          />
+        </div>
       </div>
 
       <Button

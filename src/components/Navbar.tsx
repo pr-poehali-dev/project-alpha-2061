@@ -2,9 +2,10 @@ import { useState, useEffect } from "react"
 
 interface NavbarProps {
   onUploadClick?: () => void
+  onHowClick?: () => void
 }
 
-export default function Navbar({ onUploadClick }: NavbarProps) {
+export default function Navbar({ onUploadClick, onHowClick }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -50,9 +51,9 @@ export default function Navbar({ onUploadClick }: NavbarProps) {
         </a>
 
         <div className="absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-white/70 transition duration-200 hover:text-white md:flex md:space-x-2">
-          <a className="relative px-4 py-2 text-white/70 hover:text-white transition-colors cursor-pointer" href="#how">
+          <button className="relative px-4 py-2 text-white/70 hover:text-white transition-colors cursor-pointer" onClick={onHowClick}>
             <span className="relative z-20">Как это работает</span>
-          </a>
+          </button>
           <a className="relative px-4 py-2 text-white/70 hover:text-white transition-colors cursor-pointer" href="#examples">
             <span className="relative z-20">Примеры</span>
           </a>
@@ -120,13 +121,15 @@ export default function Navbar({ onUploadClick }: NavbarProps) {
             style={{ background: "rgba(255, 255, 255, 0.1)" }}
           >
             <nav className="flex flex-col space-y-4">
-              <a
-                href="#how"
-                onClick={() => setIsMobileMenuOpen(false)}
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false)
+                  onHowClick?.()
+                }}
                 className="text-left px-4 py-3 text-lg font-medium text-white/80 hover:text-white transition-colors rounded-lg hover:bg-white/10"
               >
                 Как это работает
-              </a>
+              </button>
               <a
                 href="#examples"
                 onClick={() => setIsMobileMenuOpen(false)}

@@ -2,14 +2,16 @@ import { useState } from "react"
 import GradientBlinds from "@/components/GradientBlinds"
 import Navbar from "@/components/Navbar"
 import UploadForm from "@/components/UploadForm"
+import HowItWorksModal from "@/components/HowItWorksModal"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 const Index = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false)
+  const [isHowOpen, setIsHowOpen] = useState(false)
 
   return (
     <main className="relative h-screen overflow-hidden">
-      <Navbar onUploadClick={() => setIsUploadOpen(true)} />
+      <Navbar onUploadClick={() => setIsUploadOpen(true)} onHowClick={() => setIsHowOpen(true)} />
 
       {/* Animated Gradient Background */}
       <div className="fixed inset-0 w-full h-full flex items-center justify-center">
@@ -50,15 +52,15 @@ const Index = () => {
                 >
                   Загрузить КП
                 </button>
-                <a
-                  href="#how"
+                <button
+                  onClick={() => setIsHowOpen(true)}
                   className="inline-flex items-center justify-center rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-xl"
                 >
                   Как это работает
                   <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -70,6 +72,8 @@ const Index = () => {
           <UploadForm />
         </DialogContent>
       </Dialog>
+
+      <HowItWorksModal open={isHowOpen} onOpenChange={setIsHowOpen} />
     </main>
   )
 }
