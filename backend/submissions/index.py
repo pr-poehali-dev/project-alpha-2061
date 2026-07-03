@@ -110,24 +110,64 @@ def call_mistral_vision(old_kp_text, reference_images, name):
 
 FONT_REGULAR_PATH = '/tmp/DejaVuSans.ttf'
 FONT_BOLD_PATH = '/tmp/DejaVuSans-Bold.ttf'
-FONT_REGULAR_URL = 'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master/ttf/DejaVuSans.ttf'
-FONT_BOLD_URL = 'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master/ttf/DejaVuSans-Bold.ttf'
 
+FONT_REGULAR_URLS = [
+    'https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans.ttf',
+    'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master/ttf/DejaVuSans.ttf',
+    'https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans.ttf',
+]
+FONT_BOLD_URLS = [
+    'https://raw.githubusercontent.com/dejavu-fonts/dejavu-fonts/master/ttf/DejaVuSans-Bold.ttf',
+    'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master/ttf/DejaVuSans-Bold.ttf',
+    'https://github.com/dejavu-fonts/dejavu-fonts/raw/master/ttf/DejaVuSans-Bold.ttf',
+]
+
+FONT_REGULAR_S3_KEY = 'fonts/DejaVuSans.ttf'
+FONT_BOLD_S3_KEY = 'fonts/DejaVuSans-Bold.ttf'
 
 _fonts_registered = False
 
 
-def ensure_cyrillic_fonts():
+def download_with_fallback(urls, dest_path):
+    last_error = None
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=20) as resp:
+                data = resp.read()
+                with open(dest_path, 'wb') as f:
+                    f.write(data)
+                return data
+        except Exception as e:
+            last_error = e
+            continue
+    raise last_error
+
+
+def ensure_font_file(local_path, s3, s3_key, fallback_urls):
+    if os.path.exists(local_path):
+        return
+
+    try:
+        data = s3.get_object(Bucket='files', Key=s3_key)['Body'].read()
+        with open(local_path, 'wb') as f:
+            f.write(data)
+        return
+    except Exception:
+        pass
+
+    data = download_with_fallback(fallback_urls, local_path)
+
+    try:
+        s3.put_object(Bucket='files', Key=s3_key, Body=data, ContentType='font/ttf')
+    except Exception:
+        pass
+
+
+def ensure_cyrillic_fonts(s3):
     global _fonts_registered
 
-    if not os.path.exists(FONT_REGULAR_PATH):
-        with urllib.request.urlopen(FONT_REGULAR_URL, timeout=30) as resp:
-            with open(FONT_REGULAR_PATH, 'wb') as f:
-                f.write(resp.read())
-    if not os.path.exists(FONT_BOLD_PATH):
-        with urllib.request.urlopen(FONT_BOLD_URL, timeout=30) as resp:
-            with open(FONT_BOLD_PATH, 'wb') as f:
-                f.write(resp.read())
+    ensure_font_file(FONT_REGULAR_PATH, s3, FONT_REGULAR_S3_KEY, FONT_REGULAR_URLS)
+    ensure_font_file(FONT_BOLD_PATH, s3, FONT_BOLD_S3_KEY, FONT_BOLD_URLS)
 
     if not _fonts_registered:
         pdfmetrics.registerFont(TTFont('DejaVuSans', FONT_REGULAR_PATH))
@@ -162,8 +202,8 @@ def inject_cyrillic_font(html):
     return font_css + html
 
 
-def html_to_pdf_bytes(html):
-    ensure_cyrillic_fonts()
+def html_to_pdf_bytes(html, s3):
+    ensure_cyrillic_fonts(s3)
     html = inject_cyrillic_font(html)
     output = io.BytesIO()
     pisa.CreatePDF(src=html, dest=output, encoding='utf-8')
@@ -321,7 +361,7 @@ def handler(event: dict, context) -> dict:
             if not html_content:
                 raise ValueError(f'AI did not return html field. Response keys: {list(generated.keys())}')
 
-            pdf_bytes = html_to_pdf_bytes(html_content)
+            pdf_bytes = html_to_pdf_bytes(html_content, s3)
             pdf_key = f'submissions/{uuid.uuid4()}/result.pdf'
             pdf_url = upload_bytes(s3, bucket_cdn_id, pdf_key, pdf_bytes, 'application/pdf')
             ai_error = None
@@ -334,7 +374,12 @@ def handler(event: dict, context) -> dict:
                 f'<h1>{name}</h1><p>Не удалось автоматически собрать дизайн. '
                 f'Попробуйте другой файл референса.</p></body></html>'
             )
-            pdf_bytes = html_to_pdf_bytes(html_content)
+            try:
+                pdf_bytes = html_to_pdf_bytes(html_content, s3)
+            except Exception:
+                output = io.BytesIO()
+                pisa.CreatePDF(src=html_content, dest=output, encoding='utf-8')
+                pdf_bytes = output.getvalue()
             pdf_key = f'submissions/{uuid.uuid4()}/result.pdf'
             pdf_url = upload_bytes(s3, bucket_cdn_id, pdf_key, pdf_bytes, 'application/pdf')
             ai_error = f'{type(e).__name__}: {e}'
@@ -385,7 +430,7 @@ def handler(event: dict, context) -> dict:
                 'body': json.dumps({'error': 'Не переданы id или html_content'})
             }
 
-        pdf_bytes = html_to_pdf_bytes(html_content)
+        pdf_bytes = html_to_pdf_bytes(html_content, s3)
         pdf_key = f'submissions/{uuid.uuid4()}/result.pdf'
         pdf_url = upload_bytes(s3, bucket_cdn_id, pdf_key, pdf_bytes, 'application/pdf')
 
