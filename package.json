@@ -47,6 +47,7 @@
     "embla-carousel-react": "^8.3.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
+    "ogl": "^1.0.6",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -79,10 +80,7 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.44.1",
-    "vite": "npm:rolldown-vite@7.1.13",
-    "pp-tagger": "^1.0.1"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.1.13"
+    "vite": "^5.4.0",
+    "pp-tagger": "^1.0.3"
   }
 }
