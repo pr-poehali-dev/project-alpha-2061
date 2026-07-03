@@ -28,10 +28,10 @@
       "expectedStatus": 400
     },
     {
-      "name": "POST get_upload_url",
+      "name": "POST chunk_init",
       "method": "POST",
-      "path": "/?action=get_upload_url",
-      "body": {"filename": "test.pdf", "prefix": "old", "content_type": "application/pdf"},
+      "path": "/?action=chunk_init",
+      "body": {"filename": "test.pdf", "prefix": "old"},
       "expectedStatus": 200
     }
   ]

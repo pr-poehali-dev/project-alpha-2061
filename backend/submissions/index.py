@@ -87,26 +87,52 @@ def handler(event: dict, context) -> dict:
     )
     bucket_cdn_id = os.environ['AWS_ACCESS_KEY_ID']
 
-    if method == 'POST' and action == 'get_upload_url':
+    if method == 'POST' and action == 'chunk_init':
         body = json.loads(event.get('body', '{}'))
         filename = body.get('filename', 'file.pdf')
         prefix = body.get('prefix', 'file')
-        content_type = body.get('content_type', 'application/octet-stream')
 
         safe_name = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
         key = f'submissions/{uuid.uuid4()}/{prefix}_{safe_name}'
 
-        upload_url = s3.generate_presigned_url(
-            'put_object',
-            Params={'Bucket': 'files', 'Key': key, 'ContentType': content_type},
-            ExpiresIn=600
-        )
-        cdn_url = f'https://cdn.poehali.dev/projects/{bucket_cdn_id}/bucket/{key}'
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'key': key, 'filename': safe_name})
+        }
+
+    if method == 'POST' and action == 'chunk_append':
+        body = json.loads(event.get('body', '{}'))
+        key = body.get('key')
+        chunk_b64 = body.get('data', '')
+        content_type = body.get('content_type', 'application/octet-stream')
+        is_last = body.get('is_last', False)
+
+        if not key or chunk_b64 is None:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'Не переданы key или data'})
+            }
+
+        chunk_bytes = base64.b64decode(chunk_b64)
+
+        try:
+            existing = s3.get_object(Bucket='files', Key=key)['Body'].read()
+        except Exception:
+            existing = b''
+
+        combined = existing + chunk_bytes
+        s3.put_object(Bucket='files', Key=key, Body=combined, ContentType=content_type)
+
+        result = {'status': 'ok'}
+        if is_last:
+            result['cdn_url'] = f'https://cdn.poehali.dev/projects/{bucket_cdn_id}/bucket/{key}'
 
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({'upload_url': upload_url, 'cdn_url': cdn_url, 'filename': safe_name})
+            'body': json.dumps(result)
         }
 
     if method == 'POST' and action == 'generate':

@@ -7,6 +7,19 @@ import Icon from "@/components/ui/icon"
 import KpEditor, { GeneratedContent } from "@/components/KpEditor"
 
 const SUBMISSIONS_URL = "https://functions.poehali.dev/7ce7a415-986b-4b02-89ac-6c6edcf527a7"
+const CHUNK_SIZE = 700_000
+
+function fileToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      resolve(result.split(",")[1])
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
 
 export default function UploadForm() {
   const { toast } = useToast()
@@ -33,30 +46,45 @@ export default function UploadForm() {
 
     try {
       const uploadFile = async (file: File, prefix: string) => {
-        const urlRes = await fetch(`${SUBMISSIONS_URL}?action=get_upload_url`, {
+        const initRes = await fetch(`${SUBMISSIONS_URL}?action=chunk_init`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            prefix,
-            filename: file.name,
-            content_type: file.type || "application/octet-stream",
-          }),
+          body: JSON.stringify({ prefix, filename: file.name }),
         })
-        if (!urlRes.ok) {
+        if (!initRes.ok) {
           throw new Error("Не удалось подготовить загрузку файла")
         }
-        const { upload_url, cdn_url, filename } = await urlRes.json()
+        const { key, filename } = await initRes.json()
 
-        const putRes = await fetch(upload_url, {
-          method: "PUT",
-          headers: { "Content-Type": file.type || "application/octet-stream" },
-          body: file,
-        })
-        if (!putRes.ok) {
-          throw new Error("Не удалось загрузить файл в хранилище")
+        const contentType = file.type || "application/octet-stream"
+        const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
+        let cdnUrl = ""
+
+        for (let i = 0; i < totalChunks; i++) {
+          const chunkBlob = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE)
+          const chunkData = await fileToBase64(chunkBlob)
+          const isLast = i === totalChunks - 1
+
+          const chunkRes = await fetch(`${SUBMISSIONS_URL}?action=chunk_append`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              key,
+              data: chunkData,
+              content_type: contentType,
+              is_last: isLast,
+            }),
+          })
+          if (!chunkRes.ok) {
+            throw new Error("Не удалось загрузить часть файла")
+          }
+          if (isLast) {
+            const result = await chunkRes.json()
+            cdnUrl = result.cdn_url
+          }
         }
 
-        return { url: cdn_url, filename }
+        return { url: cdnUrl, filename }
       }
 
       const [oldKpUploaded, referenceKpUploaded] = await Promise.all([
