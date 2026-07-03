@@ -9,6 +9,9 @@ import psycopg2
 import boto3
 import fitz
 from xhtml2pdf import pisa
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.fonts import addMapping
 
 
 def upload_bytes(s3, bucket_cdn_id, key, data, content_type):
@@ -111,7 +114,12 @@ FONT_REGULAR_URL = 'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master
 FONT_BOLD_URL = 'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master/ttf/DejaVuSans-Bold.ttf'
 
 
+_fonts_registered = False
+
+
 def ensure_cyrillic_fonts():
+    global _fonts_registered
+
     if not os.path.exists(FONT_REGULAR_PATH):
         with urllib.request.urlopen(FONT_REGULAR_URL, timeout=30) as resp:
             with open(FONT_REGULAR_PATH, 'wb') as f:
@@ -121,22 +129,22 @@ def ensure_cyrillic_fonts():
             with open(FONT_BOLD_PATH, 'wb') as f:
                 f.write(resp.read())
 
+    if not _fonts_registered:
+        pdfmetrics.registerFont(TTFont('DejaVuSans', FONT_REGULAR_PATH))
+        pdfmetrics.registerFont(TTFont('DejaVuSans-Bold', FONT_BOLD_PATH))
+        addMapping('DejaVuSans', 0, 0, 'DejaVuSans')
+        addMapping('DejaVuSans', 1, 0, 'DejaVuSans-Bold')
+        addMapping('DejaVuSans', 0, 1, 'DejaVuSans')
+        addMapping('DejaVuSans', 1, 1, 'DejaVuSans-Bold')
+        _fonts_registered = True
+
 
 def build_cyrillic_font_css():
-    return f'''
+    return '''
 <style>
-@font-face {{
-    font-family: "DejaVu Sans";
-    src: url("{FONT_REGULAR_PATH}");
-}}
-@font-face {{
-    font-family: "DejaVu Sans";
-    font-weight: bold;
-    src: url("{FONT_BOLD_PATH}");
-}}
-* {{
-    font-family: "DejaVu Sans", sans-serif !important;
-}}
+* {
+    font-family: "DejaVuSans", sans-serif !important;
+}
 </style>
 '''
 
@@ -155,10 +163,7 @@ def inject_cyrillic_font(html):
 
 
 def html_to_pdf_bytes(html):
-    try:
-        ensure_cyrillic_fonts()
-    except Exception:
-        pass
+    ensure_cyrillic_fonts()
     html = inject_cyrillic_font(html)
     output = io.BytesIO()
     pisa.CreatePDF(src=html, dest=output, encoding='utf-8')
