@@ -1,11 +1,15 @@
+import { useState } from "react"
 import GradientBlinds from "@/components/GradientBlinds"
 import Navbar from "@/components/Navbar"
 import UploadForm from "@/components/UploadForm"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 const Index = () => {
+  const [isUploadOpen, setIsUploadOpen] = useState(false)
+
   return (
-    <main className="relative min-h-screen overflow-hidden">
-      <Navbar />
+    <main className="relative h-screen overflow-hidden">
+      <Navbar onUploadClick={() => setIsUploadOpen(true)} />
 
       {/* Animated Gradient Background */}
       <div className="fixed inset-0 w-full h-full flex items-center justify-center">
@@ -25,10 +29,10 @@ const Index = () => {
         />
       </div>
 
-      <div className="relative z-10 flex min-h-screen flex-col">
+      <div className="relative z-10 flex h-screen flex-col">
         {/* Hero Section */}
         <div className="flex-1 flex items-center justify-center">
-          <div className="flex items-center justify-center min-h-screen w-full px-5 sm:px-20">
+          <div className="flex items-center justify-center h-screen w-full px-5 sm:px-20">
             <div className="relative z-10 flex max-w-4xl flex-col items-center gap-8 text-center">
               <h1 className="text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl text-balance drop-shadow-2xl">
                 Ваше КП —
@@ -40,12 +44,12 @@ const Index = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <a
-                  href="#upload"
+                <button
+                  onClick={() => setIsUploadOpen(true)}
                   className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-black transition-all hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-2xl"
                 >
                   Загрузить КП
-                </a>
+                </button>
                 <a
                   href="#how"
                   className="inline-flex items-center justify-center rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-xl"
@@ -59,12 +63,13 @@ const Index = () => {
             </div>
           </div>
         </div>
-
-        {/* Upload Section */}
-        <div id="upload" className="flex items-center justify-center px-5 py-24 sm:px-20">
-          <UploadForm />
-        </div>
       </div>
+
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="bg-transparent border-none shadow-none p-0 max-w-xl w-full">
+          <UploadForm />
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }

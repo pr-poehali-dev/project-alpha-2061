@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react"
 
-export default function Navbar() {
+interface NavbarProps {
+  onUploadClick?: () => void
+}
+
+export default function Navbar({ onUploadClick }: NavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -58,12 +62,12 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <a
-            href="#upload"
+          <button
+            onClick={onUploadClick}
             className="rounded-lg font-medium relative cursor-pointer hover:-translate-y-0.5 transition-all duration-200 inline-block text-center px-4 py-2 text-sm border bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-400/30 text-white hover:from-blue-500 hover:to-indigo-500"
           >
             Загрузить КП
-          </a>
+          </button>
         </div>
       </header>
 
@@ -138,13 +142,15 @@ export default function Navbar() {
                 Цены
               </a>
               <div className="border-t border-white/20 pt-4 mt-4 flex flex-col space-y-3">
-                <a
-                  href="#upload"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    onUploadClick?.()
+                  }}
                   className="px-4 py-3 text-lg font-bold text-center rounded-lg transition-all duration-200 border bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-400/30 text-white"
                 >
                   Загрузить КП
-                </a>
+                </button>
               </div>
             </nav>
           </div>
