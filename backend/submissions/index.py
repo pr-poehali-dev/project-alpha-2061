@@ -87,29 +87,26 @@ def handler(event: dict, context) -> dict:
     )
     bucket_cdn_id = os.environ['AWS_ACCESS_KEY_ID']
 
-    if method == 'POST' and action == 'upload_file':
+    if method == 'POST' and action == 'get_upload_url':
         body = json.loads(event.get('body', '{}'))
-        file_obj = body.get('file')
+        filename = body.get('filename', 'file.pdf')
         prefix = body.get('prefix', 'file')
+        content_type = body.get('content_type', 'application/octet-stream')
 
-        if not file_obj:
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'body': json.dumps({'error': 'Не передан file'})
-            }
-
-        filename = file_obj.get('filename', 'file.pdf')
         safe_name = re.sub(r'[^a-zA-Z0-9._-]', '_', filename)
-        content_type = file_obj.get('content_type', 'application/octet-stream')
-        data = base64.b64decode(file_obj['data'])
         key = f'submissions/{uuid.uuid4()}/{prefix}_{safe_name}'
-        url = upload_bytes(s3, bucket_cdn_id, key, data, content_type)
+
+        upload_url = s3.generate_presigned_url(
+            'put_object',
+            Params={'Bucket': 'files', 'Key': key, 'ContentType': content_type},
+            ExpiresIn=600
+        )
+        cdn_url = f'https://cdn.poehali.dev/projects/{bucket_cdn_id}/bucket/{key}'
 
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({'url': url, 'filename': safe_name})
+            'body': json.dumps({'upload_url': upload_url, 'cdn_url': cdn_url, 'filename': safe_name})
         }
 
     if method == 'POST' and action == 'generate':

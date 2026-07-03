@@ -8,18 +8,6 @@ import KpEditor, { GeneratedContent } from "@/components/KpEditor"
 
 const SUBMISSIONS_URL = "https://functions.poehali.dev/7ce7a415-986b-4b02-89ac-6c6edcf527a7"
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      resolve(result.split(",")[1])
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
 export default function UploadForm() {
   const { toast } = useToast()
   const [name, setName] = useState("")
@@ -45,24 +33,30 @@ export default function UploadForm() {
 
     try {
       const uploadFile = async (file: File, prefix: string) => {
-        const data = await fileToBase64(file)
-        const res = await fetch(`${SUBMISSIONS_URL}?action=upload_file`, {
+        const urlRes = await fetch(`${SUBMISSIONS_URL}?action=get_upload_url`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             prefix,
-            file: {
-              filename: file.name,
-              content_type: file.type || "application/octet-stream",
-              data,
-            },
+            filename: file.name,
+            content_type: file.type || "application/octet-stream",
           }),
         })
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}))
-          throw new Error(err.error || "Не удалось загрузить файл")
+        if (!urlRes.ok) {
+          throw new Error("Не удалось подготовить загрузку файла")
         }
-        return res.json() as Promise<{ url: string; filename: string }>
+        const { upload_url, cdn_url, filename } = await urlRes.json()
+
+        const putRes = await fetch(upload_url, {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "application/octet-stream" },
+          body: file,
+        })
+        if (!putRes.ok) {
+          throw new Error("Не удалось загрузить файл в хранилище")
+        }
+
+        return { url: cdn_url, filename }
       }
 
       const [oldKpUploaded, referenceKpUploaded] = await Promise.all([

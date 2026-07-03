@@ -26,6 +26,13 @@
       "method": "GET",
       "path": "/?action=get",
       "expectedStatus": 400
+    },
+    {
+      "name": "POST get_upload_url",
+      "method": "POST",
+      "path": "/?action=get_upload_url",
+      "body": {"filename": "test.pdf", "prefix": "old", "content_type": "application/pdf"},
+      "expectedStatus": 200
     }
   ]
 }
