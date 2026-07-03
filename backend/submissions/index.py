@@ -297,21 +297,33 @@ def handler(event: dict, context) -> dict:
             }
 
         try:
+            print(f'[generate] fetching old_kp from {old_kp_url}')
             old_kp_bytes = fetch_bytes(old_kp_url)
+            print(f'[generate] fetching reference from {reference_kp_url}')
             reference_bytes = fetch_bytes(reference_kp_url)
 
             old_kp_text = extract_pdf_text(old_kp_bytes)
+            print(f'[generate] extracted old_kp_text len={len(old_kp_text)}')
             reference_images = render_pdf_pages_as_images(reference_bytes)
+            print(f'[generate] rendered {len(reference_images)} reference images')
 
             ai_response = call_mistral_vision(old_kp_text, reference_images, name)
+            print(f'[generate] ai_response len={len(ai_response)} preview={ai_response[:300]}')
             generated = json.loads(ai_response)
             html_content = generated.get('html', '')
+            print(f'[generate] html_content len={len(html_content)}')
+
+            if not html_content:
+                raise ValueError(f'AI did not return html field. Response keys: {list(generated.keys())}')
 
             pdf_bytes = html_to_pdf_bytes(html_content)
             pdf_key = f'submissions/{uuid.uuid4()}/result.pdf'
             pdf_url = upload_bytes(s3, bucket_cdn_id, pdf_key, pdf_bytes, 'application/pdf')
             ai_error = None
         except Exception as e:
+            import traceback
+            print(f'[generate] ERROR: {type(e).__name__}: {e}')
+            print(traceback.format_exc())
             html_content = (
                 f'<html><body style="font-family:sans-serif;padding:40px">'
                 f'<h1>{name}</h1><p>Не удалось автоматически собрать дизайн. '
@@ -320,7 +332,7 @@ def handler(event: dict, context) -> dict:
             pdf_bytes = html_to_pdf_bytes(html_content)
             pdf_key = f'submissions/{uuid.uuid4()}/result.pdf'
             pdf_url = upload_bytes(s3, bucket_cdn_id, pdf_key, pdf_bytes, 'application/pdf')
-            ai_error = str(e)
+            ai_error = f'{type(e).__name__}: {e}'
 
         conn = psycopg2.connect(dsn)
         cur = conn.cursor()
