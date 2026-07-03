@@ -1,5 +1,6 @@
 import GradientBlinds from "@/components/GradientBlinds"
 import Navbar from "@/components/Navbar"
+import UploadForm from "@/components/UploadForm"
 
 const Index = () => {
   return (
@@ -39,18 +40,29 @@ const Index = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
-                <button className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-black transition-all hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-2xl">
+                <a
+                  href="#upload"
+                  className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-black transition-all hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-2xl"
+                >
                   Загрузить КП
-                </button>
-                <button className="inline-flex items-center justify-center rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-xl">
+                </a>
+                <a
+                  href="#how"
+                  className="inline-flex items-center justify-center rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-xl"
+                >
                   Как это работает
                   <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
-                </button>
+                </a>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Upload Section */}
+        <div id="upload" className="flex items-center justify-center px-5 py-24 sm:px-20">
+          <UploadForm />
         </div>
       </div>
     </main>
