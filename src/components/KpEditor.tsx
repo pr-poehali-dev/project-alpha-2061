@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -147,7 +148,7 @@ export default function KpEditor({ submissionId, initialContent, initialTelegram
 
   const { primary, secondary, accent } = content.colors
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[10000] overflow-y-auto bg-black">
       <div
         className="min-h-screen w-full py-16 px-5 sm:px-10"
@@ -287,6 +288,7 @@ export default function KpEditor({ submissionId, initialContent, initialTelegram
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
