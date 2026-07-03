@@ -30,20 +30,20 @@ const Index = () => {
           <div className="flex items-center justify-center min-h-screen w-full px-5 sm:px-20">
             <div className="relative z-10 flex max-w-4xl flex-col items-center gap-8 text-center">
               <h1 className="text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl text-balance drop-shadow-2xl">
-                Аналитика данных
+                Ваше КП —
                 <br />
-                нового поколения
+                как из премиум-агентства
               </h1>
               <p className="text-xl text-white/90 max-w-3xl text-pretty drop-shadow-lg">
-                Визуализируйте данные в реальном времени, получайте мгновенные инсайты и принимайте решения на основе точной аналитики.
+                Загрузите своё коммерческое предложение и пример дизайна, который вам нравится. Мы возьмём ваши данные и превратим их в красивый PDF за минуты.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mt-4">
                 <button className="inline-flex items-center justify-center rounded-full bg-white px-8 py-4 text-lg font-semibold text-black transition-all hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-2xl">
-                  Начать бесплатно
+                  Загрузить КП
                 </button>
                 <button className="inline-flex items-center justify-center rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-lg font-semibold text-white backdrop-blur transition-all hover:bg-white/20 hover:border-white/50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent shadow-xl">
-                  Смотреть демо
+                  Как это работает
                   <svg className="ml-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
