@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import Icon from "@/components/ui/icon"
-import KpEditor, { GeneratedContent } from "@/components/KpEditor"
+import PdfResultViewer from "@/components/PdfResultViewer"
 
 const SUBMISSIONS_URL = "https://functions.poehali.dev/7ce7a415-986b-4b02-89ac-6c6edcf527a7"
 const CHUNK_SIZE = 700_000
@@ -28,7 +28,7 @@ export default function UploadForm() {
   const [oldKp, setOldKp] = useState<File | null>(null)
   const [referenceKp, setReferenceKp] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [result, setResult] = useState<{ id: number; generated_content: GeneratedContent } | null>(null)
+  const [result, setResult] = useState<{ id: number; pdf_url: string } | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,7 +111,7 @@ export default function UploadForm() {
       }
 
       const data = await response.json()
-      setResult({ id: data.id, generated_content: data.generated_content })
+      setResult({ id: data.id, pdf_url: data.pdf_url })
       toast({
         title: "Готово!",
         description: "Ваше новое КП сгенерировано",
@@ -129,9 +129,9 @@ export default function UploadForm() {
 
   if (result) {
     return (
-      <KpEditor
+      <PdfResultViewer
         submissionId={result.id}
-        initialContent={result.generated_content}
+        pdfUrl={result.pdf_url}
         initialTelegramContact={telegramContact}
       />
     )
