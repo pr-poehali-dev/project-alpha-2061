@@ -97,7 +97,61 @@ def call_mistral_vision(old_kp_text, reference_images, name):
     return result['choices'][0]['message']['content']
 
 
+FONT_REGULAR_PATH = '/tmp/DejaVuSans.ttf'
+FONT_BOLD_PATH = '/tmp/DejaVuSans-Bold.ttf'
+FONT_REGULAR_URL = 'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master/ttf/DejaVuSans.ttf'
+FONT_BOLD_URL = 'https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@master/ttf/DejaVuSans-Bold.ttf'
+
+
+def ensure_cyrillic_fonts():
+    if not os.path.exists(FONT_REGULAR_PATH):
+        with urllib.request.urlopen(FONT_REGULAR_URL, timeout=30) as resp:
+            with open(FONT_REGULAR_PATH, 'wb') as f:
+                f.write(resp.read())
+    if not os.path.exists(FONT_BOLD_PATH):
+        with urllib.request.urlopen(FONT_BOLD_URL, timeout=30) as resp:
+            with open(FONT_BOLD_PATH, 'wb') as f:
+                f.write(resp.read())
+
+
+def build_cyrillic_font_css():
+    return f'''
+<style>
+@font-face {{
+    font-family: "DejaVu Sans";
+    src: url("{FONT_REGULAR_PATH}");
+}}
+@font-face {{
+    font-family: "DejaVu Sans";
+    font-weight: bold;
+    src: url("{FONT_BOLD_PATH}");
+}}
+* {{
+    font-family: "DejaVu Sans", sans-serif !important;
+}}
+</style>
+'''
+
+
+def inject_cyrillic_font(html):
+    font_css = build_cyrillic_font_css()
+    if re.search(r'<head[^>]*>', html, re.IGNORECASE):
+        return re.sub(
+            r'(<head[^>]*>)',
+            r'\1' + font_css,
+            html,
+            count=1,
+            flags=re.IGNORECASE
+        )
+    return font_css + html
+
+
 def html_to_pdf_bytes(html):
+    try:
+        ensure_cyrillic_fonts()
+    except Exception:
+        pass
+    html = inject_cyrillic_font(html)
     output = io.BytesIO()
     pisa.CreatePDF(src=html, dest=output, encoding='utf-8')
     return output.getvalue()
